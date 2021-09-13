@@ -29,6 +29,11 @@ jobs:
         with:
           java-version: 1.8
 
+      - name: trufflehog-actions-scan
+        uses: edplato/trufflehog-actions-scan@master
+        with:
+          scanArguments: "--regex --entropy=False --max_depth=5 --rules /regexes.json"
+
       # Build
       - name: Build Package
         run: mvn -B package --file pom.xml
@@ -38,46 +43,3 @@ jobs:
         run: |
           cd target
           ls -a
-     
-     # SAST
-      - name: SonarQube Scan
-        uses: kitabisa/sonarqube-action@v1.1.0
-        with:
-          host: ${{ secrets.SONARQUBE_HOST }}
-          login: ${{ secrets.SONARQUBE_TOKEN }}
-          
-      # deploy
-      - name: Upload application
-        uses: appleboy/scp-action@master
-        with:       
-          host: ${{ secrets.SERVER_IP_ADDRESS }}        
-          username: ${{ secrets.SERVER_USERNAME }}      
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: 22
-          source: "my-app.jar"      
-          target: "~/source"
-      - name: Start Service
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.API_IP_ADDRESS }}       
-          username: ${{ secrets.API_USERNAME }}     
-          key: ${{ secrets.AWS_SSH_KEY }}
-          port: 22
-          script: |
-            sudo /etc/init.d/my-app stop
-            mv ~/source/my-app.jar ~/source/my-app-old.jar
-            mv ~/source/my-app-latest.jar ~/source/my-app.jar
-            sudo rm -rf /etc/init.d/my-app
-            sudo ln -s -f ~/source/my-app.jar /etc/init.d/my-app
-            sudo /etc/init.d/my-app start
-            rm ~/source/my-app-old.jar
-      
-      # DAST
-      - name: ZAP Scan
-        uses: zaproxy/action-full-scan@v0.2.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          docker_name: 'owasp/zap2docker-stable'
-          target: 'https://www.zaproxy.org/'
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'
