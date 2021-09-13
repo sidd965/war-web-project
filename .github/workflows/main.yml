@@ -33,7 +33,7 @@ jobs:
       - name: Build Package
         run: mvn -B package --file pom.xml
         
-      # verify
+      # Verify
       - name: Verify package
         run: |
           cd target
@@ -71,3 +71,13 @@ jobs:
             sudo ln -s -f ~/source/my-app.jar /etc/init.d/my-app
             sudo /etc/init.d/my-app start
             rm ~/source/my-app-old.jar
+      
+      # DAST
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          docker_name: 'owasp/zap2docker-stable'
+          target: 'https://www.zaproxy.org/'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
