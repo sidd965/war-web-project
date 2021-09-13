@@ -38,6 +38,13 @@ jobs:
         run: |
           cd target
           ls -a
+     
+     # SAST
+      - name: SonarQube Scan
+        uses: kitabisa/sonarqube-action@v1.1.0
+        with:
+          host: ${{ secrets.SONARQUBE_HOST }}
+          login: ${{ secrets.SONARQUBE_TOKEN }}
           
       # deploy
       - name: Upload application
